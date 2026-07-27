@@ -8,6 +8,13 @@ import ProgressChart, { Sparkline } from '@/components/ProgressChart';
 import Icon from '@/components/Icon';
 import { freshState } from '@/lib/seed';
 import {
+  fetchStatus,
+  savedKey,
+  rememberKey,
+  pushBackup,
+  pullBackup,
+} from '@/lib/backup';
+import {
   loadState,
   saveState,
   todayKey,
@@ -25,13 +32,91 @@ export default function Page() {
   const [chartVariant, setChartVariant] = useState(null);
   const [dateSheet, setDateSheet] = useState(null);
   const [weekOffset, setWeekOffset] = useState(0);
+  const [backup, setBackup] = useState({
+    configured: false,
+    hasStore: false,
+    hasSecret: false,
+    key: '',
+    status: 'idle',
+    updatedAt: null,
+    error: null,
+  });
   const fileRef = useRef(null);
+  const skipFirstBackup = useRef(true);
 
   useEffect(() => {
     const initial = loadState();
     setState(initial);
     saveState(initial);
   }, []);
+
+  useEffect(() => {
+    fetchStatus().then((s) =>
+      setBackup((b) => ({ ...b, ...s, key: savedKey() }))
+    );
+  }, []);
+
+  // Push a copy up whenever the data changes, a couple of seconds after you
+  // stop tapping. Failures are surfaced but never block anything local.
+  useEffect(() => {
+    if (!state || !backup.configured || !backup.key) return;
+    if (skipFirstBackup.current) {
+      skipFirstBackup.current = false;
+      return;
+    }
+    const id = setTimeout(async () => {
+      setBackup((b) => ({ ...b, status: 'saving' }));
+      try {
+        const updatedAt = await pushBackup(backup.key, state);
+        setBackup((b) => ({ ...b, status: 'saved', updatedAt, error: null }));
+      } catch (e) {
+        setBackup((b) => ({ ...b, status: 'error', error: e.message }));
+      }
+    }, 2000);
+    return () => clearTimeout(id);
+  }, [state, backup.configured, backup.key]);
+
+  async function connectBackup(key) {
+    setBackup((b) => ({ ...b, status: 'saving', error: null }));
+    try {
+      const updatedAt = await pushBackup(key, state);
+      rememberKey(key);
+      setBackup((b) => ({ ...b, key, status: 'saved', updatedAt, error: null }));
+    } catch (e) {
+      setBackup((b) => ({ ...b, status: 'error', error: e.message }));
+    }
+  }
+
+  async function restoreBackup() {
+    setBackup((b) => ({ ...b, status: 'saving', error: null }));
+    try {
+      const got = await pullBackup(backup.key);
+      if (!got) {
+        setBackup((b) => ({
+          ...b,
+          status: 'error',
+          error: 'Nothing has been backed up yet.',
+        }));
+        return;
+      }
+      skipFirstBackup.current = true;
+      setState(got.data);
+      saveState(got.data);
+      setBackup((b) => ({
+        ...b,
+        status: 'saved',
+        updatedAt: got.updatedAt,
+        error: null,
+      }));
+    } catch (e) {
+      setBackup((b) => ({ ...b, status: 'error', error: e.message }));
+    }
+  }
+
+  function disconnectBackup() {
+    rememberKey('');
+    setBackup((b) => ({ ...b, key: '', status: 'idle', error: null }));
+  }
 
   function mutate(recipe) {
     setState((prev) => {
@@ -172,6 +257,10 @@ export default function Page() {
             <Library
               state={state}
               mutate={mutate}
+              backup={backup}
+              onConnectBackup={connectBackup}
+              onRestoreBackup={restoreBackup}
+              onDisconnectBackup={disconnectBackup}
               onExport={exportFile}
               onImport={() => fileRef.current?.click()}
               onReset={() => {

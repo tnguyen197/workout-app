@@ -277,7 +277,113 @@ function DayEditor({ state, mutate }) {
   );
 }
 
-export default function Library({ state, mutate, onExport, onImport, onReset }) {
+function CloudBackup({ backup, onConnect, onRestore, onDisconnect }) {
+  const [pass, setPass] = useState('');
+
+  if (!backup.configured) {
+    return (
+      <>
+        <p className="eyebrow">Cloud backup</p>
+        <p className="note" style={{ marginBottom: 10 }}>
+          Not switched on yet. Two things are needed in your Vercel project:
+        </p>
+        <div className="setup-list">
+          <div className={`setup-item${backup.hasStore ? ' done' : ''}`}>
+            <span className="setup-mark">
+              {backup.hasStore ? <Icon name="check" size={13} /> : '1'}
+            </span>
+            A Redis store added from the Vercel Marketplace
+          </div>
+          <div className={`setup-item${backup.hasSecret ? ' done' : ''}`}>
+            <span className="setup-mark">
+              {backup.hasSecret ? <Icon name="check" size={13} /> : '2'}
+            </span>
+            An environment variable named BACKUP_SECRET
+          </div>
+        </div>
+        <p className="note">
+          Until both are in place the app works exactly as it does now, saving
+          to this device only.
+        </p>
+      </>
+    );
+  }
+
+  if (!backup.key) {
+    return (
+      <>
+        <p className="eyebrow">Cloud backup</p>
+        <p className="note" style={{ marginBottom: 10 }}>
+          Enter the passphrase you set as BACKUP_SECRET to switch on automatic
+          backups.
+        </p>
+        <div className="vedit">
+          <input
+            type="password"
+            value={pass}
+            placeholder="passphrase"
+            onChange={(e) => setPass(e.target.value)}
+            style={{ textTransform: 'none', letterSpacing: 0, fontSize: 14 }}
+            aria-label="Backup passphrase"
+          />
+          <button
+            className="btn btn-ghost btn-sm"
+            disabled={!pass.trim() || backup.status === 'saving'}
+            onClick={() => onConnect(pass.trim())}
+          >
+            {backup.status === 'saving' ? 'Checking' : 'Connect'}
+          </button>
+        </div>
+        {backup.error && <p className="note err">{backup.error}</p>}
+      </>
+    );
+  }
+
+  const when = backup.updatedAt
+    ? new Date(backup.updatedAt).toLocaleString()
+    : 'not yet';
+
+  return (
+    <>
+      <p className="eyebrow">Cloud backup</p>
+      <div className="backup-live">
+        <span className={`dot ${backup.status}`} />
+        <span>
+          {backup.status === 'saving'
+            ? 'Backing up\u2026'
+            : backup.status === 'error'
+              ? 'Last attempt failed'
+              : `Backed up ${when}`}
+        </span>
+      </div>
+      {backup.error && <p className="note err">{backup.error}</p>}
+      <p className="note" style={{ marginBottom: 12 }}>
+        Saves on its own a couple of seconds after any change. Restore pulls the
+        stored copy back and replaces what is on this device.
+      </p>
+      <div className="btn-row">
+        <button className="btn btn-ghost btn-full" onClick={onRestore}>
+          Restore
+        </button>
+        <button className="btn btn-ghost btn-full" onClick={onDisconnect}>
+          Disconnect
+        </button>
+      </div>
+    </>
+  );
+}
+
+export default function Library({
+  state,
+  mutate,
+  onExport,
+  onImport,
+  onReset,
+  backup,
+  onConnectBackup,
+  onRestoreBackup,
+  onDisconnectBackup,
+}) {
   const [tab, setTab] = useState('exercises');
   const [newName, setNewName] = useState('');
 
@@ -399,7 +505,16 @@ export default function Library({ state, mutate, onExport, onImport, onReset }) 
 
           <hr className="divider" />
 
-          <p className="eyebrow">Backup</p>
+          <CloudBackup
+            backup={backup}
+            onConnect={onConnectBackup}
+            onRestore={onRestoreBackup}
+            onDisconnect={onDisconnectBackup}
+          />
+
+          <hr className="divider" />
+
+          <p className="eyebrow">Backup file</p>
           <p className="note" style={{ marginBottom: 12 }}>
             Everything lives in this browser only. Clearing site data wipes it, so
             export a copy now and then. The file restores onto any device.

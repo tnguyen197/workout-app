@@ -19,6 +19,7 @@ const PATHS = {
   arrowDown: 'M10 4v12M5 11l5 5 5-5',
   chart: 'M3 14l4-5 3 2.5L17 4',
   swap: 'M4 7h11l-3-3M16 13H5l3 3',
+  check: 'M4 10.5l4 4 8-9',
 };
 
 export default function Icon({ name, size = 18, stroke = 1.75, style }) {
