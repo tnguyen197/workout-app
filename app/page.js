@@ -32,6 +32,7 @@ export default function Page() {
   const [chartVariant, setChartVariant] = useState(null);
   const [dateSheet, setDateSheet] = useState(null);
   const [weekOffset, setWeekOffset] = useState(0);
+  const [progressOpen, setProgressOpen] = useState(false);
   const [backup, setBackup] = useState({
     configured: false,
     hasStore: false,
@@ -311,8 +312,19 @@ export default function Page() {
                 );
               })}
 
-              <p className="eyebrow">Weight progress</p>
-              {Object.values(state.exercises).map((ex) => {
+              <button
+                className="section-toggle"
+                onClick={() => setProgressOpen((o) => !o)}
+                aria-expanded={progressOpen}
+              >
+                <span className="section-title">Weight progress</span>
+                <span className="section-meta">
+                  {Object.keys(state.exercises).length} lifts
+                </span>
+                <Icon name={progressOpen ? 'up' : 'down'} size={16} />
+              </button>
+              {progressOpen &&
+                Object.values(state.exercises).map((ex) => {
                 const v = ex.variants[0];
                 const hist = historyFor(state.sessions, ex.id, v.id);
                 const delta = hist.length > 1
@@ -339,9 +351,9 @@ export default function Page() {
                     <span className={`prog-delta${delta > 0 ? ' up' : ''}`}>
                       {delta > 0 ? `+${delta}` : delta < 0 ? delta : '\u2013'}
                     </span>
-                  </button>
-                );
-              })}
+                    </button>
+                  );
+                })}
             </>
           )}
         </>
