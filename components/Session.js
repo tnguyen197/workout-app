@@ -3,7 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 import ExerciseRow from './ExerciseRow';
 import RestTimer from './RestTimer';
-import { otherDaysUsing, lastSessionFor, relativeDay, todayKey } from '@/lib/store';
+import Icon from './Icon';
+import {
+  otherDaysUsing,
+  lastSessionFor,
+  relativeDay,
+  todayKey,
+  tint,
+} from '@/lib/store';
 
 export default function Session({
   day,
@@ -51,8 +58,12 @@ export default function Session({
     <>
       <div className="sess-head">
         <button className="back-btn" onClick={onBack} aria-label="Back">
-          &#8592;
+          <Icon name="arrowLeft" size={19} />
         </button>
+        <span
+          className="daycard-bar"
+          style={{ background: day.color, minHeight: 22 }}
+        />
         <h1 className="sess-title">{day.name}</h1>
       </div>
       <p className="sess-sub">
@@ -79,7 +90,11 @@ export default function Session({
       </div>
 
       <div className="btn-row">
-        <button className="btn btn-primary btn-full" onClick={onFinish}>
+        <button
+          className="btn btn-primary btn-full"
+          style={{ background: day.color }}
+          onClick={onFinish}
+        >
           {loggedToday ? 'Update today\u2019s log' : 'Finish workout'}
         </button>
       </div>
@@ -89,10 +104,19 @@ export default function Session({
       </p>
 
       {toast && (
-        <div className="toast" role="status">
-          <span>&#8644;</span>
+        <div
+          className="toast"
+          role="status"
+          style={{
+            background: tint(day.color, 0.14),
+            borderColor: tint(day.color, 0.45),
+            color: tint(day.color, 0.95),
+          }}
+        >
+          <Icon name="swap" size={16} />
           <span>
-            <b>{toast.name}</b> also updated in {toast.days.join(' and ')}
+            <b style={{ color: day.color }}>{toast.name}</b> also updated in{' '}
+            {toast.days.join(' and ')}
           </span>
         </div>
       )}

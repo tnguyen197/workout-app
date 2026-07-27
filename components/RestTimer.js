@@ -99,7 +99,7 @@ export default function RestTimer({ duration, endsAt, onStart, onStop, onAdjust 
                 onClick={() => onAdjust(-15)}
                 aria-label="Decrease rest by 15 seconds"
               >
-                &minus;15
+                -15
               </button>
               <button className="btn btn-primary btn-sm" onClick={onStart}>
                 Start rest

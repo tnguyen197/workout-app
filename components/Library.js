@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import Icon from './Icon';
+import { DAY_PALETTE } from '@/lib/seed';
+import { tint } from '@/lib/store';
 
 function slugify(name, taken) {
   const base =
@@ -36,7 +39,7 @@ function ExerciseCard({ ex, usedBy, mutate }) {
           aria-label={open ? 'Collapse' : 'Expand'}
           aria-expanded={open}
         >
-          {open ? '\u2227' : '\u2228'}
+          <Icon name={open ? 'up' : 'down'} size={16} />
         </button>
         <button
           className="icon-btn"
@@ -51,7 +54,7 @@ function ExerciseCard({ ex, usedBy, mutate }) {
           }}
           aria-label={`Delete ${ex.name}`}
         >
-          &times;
+          <Icon name="close" size={15} />
         </button>
       </div>
 
@@ -98,7 +101,7 @@ function ExerciseCard({ ex, usedBy, mutate }) {
                 }
                 aria-label="Remove variant"
               >
-                &times;
+                <Icon name="close" size={15} />
               </button>
             </div>
           ))}
@@ -147,8 +150,18 @@ function DayEditor({ state, mutate }) {
           <button
             key={d.id}
             className={`chip${d.id === day.id ? ' on' : ''}`}
+            style={
+              d.id === day.id
+                ? {
+                    background: tint(d.color, 0.16),
+                    borderColor: tint(d.color, 0.5),
+                    color: d.color,
+                  }
+                : undefined
+            }
             onClick={() => setActiveId(d.id)}
           >
+            <span className="chip-dot" style={{ background: d.color }} />
             {d.name}
           </button>
         ))}
@@ -156,6 +169,7 @@ function DayEditor({ state, mutate }) {
 
       <div className="libcard">
         <div className="libcard-head">
+          <span className="daycard-bar" style={{ background: day.color }} />
           <input
             className="libname"
             value={day.name}
@@ -166,6 +180,21 @@ function DayEditor({ state, mutate }) {
             }
             aria-label="Day name"
           />
+        </div>
+        <div className="swatches">
+          {DAY_PALETTE.map((c) => (
+            <button
+              key={c}
+              className={`swatch${day.color === c ? ' on' : ''}`}
+              style={{ background: c }}
+              onClick={() =>
+                mutate((s) => {
+                  s.days[dayIndex].color = c;
+                })
+              }
+              aria-label={`Set ${day.name} colour`}
+            />
+          ))}
         </div>
       </div>
 
@@ -190,7 +219,7 @@ function DayEditor({ state, mutate }) {
                 }
                 aria-label="Move up"
               >
-                &uarr;
+                <Icon name="arrowUp" size={16} />
               </button>
               <button
                 className="icon-btn"
@@ -204,7 +233,7 @@ function DayEditor({ state, mutate }) {
                 }
                 aria-label="Move down"
               >
-                &darr;
+                <Icon name="arrowDown" size={16} />
               </button>
               <button
                 className="icon-btn"
@@ -217,7 +246,7 @@ function DayEditor({ state, mutate }) {
                 }
                 aria-label={`Remove ${ex.name} from ${day.name}`}
               >
-                &times;
+                <Icon name="close" size={15} />
               </button>
             </div>
           </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Icon from './Icon';
 
 function WeightInput({ value, onCommit }) {
   const [draft, setDraft] = useState(null);
@@ -9,6 +10,7 @@ function WeightInput({ value, onCommit }) {
     <input
       className="step-val"
       type="text"
+      size={4}
       inputMode="decimal"
       value={draft ?? value}
       onFocus={(e) => {
@@ -45,7 +47,11 @@ export default function ExerciseRow({
 
   return (
     <article className="exrow">
-      <div className="exrow-head">
+      <button
+        className="exrow-head"
+        onClick={() => onOpenChart(exercise.id)}
+        aria-label={`${exercise.name} weight history`}
+      >
         <h3 className="exrow-name">{exercise.name}</h3>
         {isShared && (
           <span
@@ -55,22 +61,10 @@ export default function ExerciseRow({
             LINKED
           </span>
         )}
-        <button
-          className="exrow-chart"
-          onClick={() => onOpenChart(exercise.id)}
-          aria-label={`Progress for ${exercise.name}`}
-        >
-          <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-            <path
-              d="M1.5 11.5L5 7.5L8 9.5L13.5 3"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-      </div>
+        <span className="exrow-chart">
+          <Icon name="chart" size={16} />
+        </span>
+      </button>
 
       {exercise.variants.map((v) => (
         <div className="vrow" key={v.id}>
@@ -83,7 +77,7 @@ export default function ExerciseRow({
               }
               aria-label={`Decrease ${exercise.name}${v.label ? ` ${v.label}` : ''}`}
             >
-              &minus;
+              <Icon name="minus" size={20} stroke={2} />
             </button>
             <WeightInput
               value={v.weight}
@@ -94,7 +88,7 @@ export default function ExerciseRow({
               onClick={() => onChange(exercise.id, v.id, v.weight + increment)}
               aria-label={`Increase ${exercise.name}${v.label ? ` ${v.label}` : ''}`}
             >
-              +
+              <Icon name="plus" size={20} stroke={2} />
             </button>
           </div>
         </div>

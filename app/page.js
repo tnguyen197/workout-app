@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import WeekStrip from '@/components/WeekStrip';
 import Session from '@/components/Session';
 import Library from '@/components/Library';
-import ProgressChart from '@/components/ProgressChart';
+import ProgressChart, { Sparkline } from '@/components/ProgressChart';
+import Icon from '@/components/Icon';
 import { freshState } from '@/lib/seed';
 import {
   loadState,
@@ -13,6 +14,7 @@ import {
   historyFor,
   lastSessionFor,
   relativeDay,
+  tint,
 } from '@/lib/store';
 
 export default function Page() {
@@ -184,6 +186,7 @@ export default function Page() {
             <>
               <WeekStrip
                 sessions={state.sessions}
+                days={state.days}
                 offset={weekOffset}
                 onOffset={setWeekOffset}
                 onPickDate={(date, session) => setDateSheet({ date, session })}
@@ -201,14 +204,52 @@ export default function Page() {
                       setView('session');
                     }}
                   >
-                    <span>
+                    <span
+                      className="daycard-bar"
+                      style={{ background: d.color }}
+                    />
+                    <span className="daycard-body">
                       <span className="daycard-name">{d.name}</span>
                       <span className="daycard-sub">
                         {d.exerciseIds.length} lifts &middot;{' '}
                         {relativeDay(last?.date)}
                       </span>
                     </span>
-                    <span className="daycard-go">&rarr;</span>
+                    <span className="daycard-go">
+                      <Icon name="arrowRight" size={17} />
+                    </span>
+                  </button>
+                );
+              })}
+
+              <p className="eyebrow">Weight progress</p>
+              {Object.values(state.exercises).map((ex) => {
+                const v = ex.variants[0];
+                const hist = historyFor(state.sessions, ex.id, v.id);
+                const delta = hist.length > 1
+                  ? hist[hist.length - 1].weight - hist[0].weight
+                  : 0;
+                const owner = state.days.find((d) =>
+                  d.exerciseIds.includes(ex.id)
+                );
+                return (
+                  <button
+                    key={ex.id}
+                    className="prog-row"
+                    onClick={() => {
+                      setChartId(ex.id);
+                      setChartVariant(null);
+                    }}
+                  >
+                    <span className="prog-name">{ex.name}</span>
+                    <Sparkline
+                      history={hist}
+                      color={owner ? owner.color : 'var(--smoke)'}
+                    />
+                    <span className="prog-weight">{v.weight}</span>
+                    <span className={`prog-delta${delta > 0 ? ' up' : ''}`}>
+                      {delta > 0 ? `+${delta}` : delta < 0 ? delta : '\u2013'}
+                    </span>
                   </button>
                 );
               })}
@@ -237,7 +278,7 @@ export default function Page() {
                 onClick={() => setChartId(null)}
                 aria-label="Close"
               >
-                &times;
+                <Icon name="close" size={16} />
               </button>
             </div>
             <p className="sheet-sub">Weight logged at each finished workout</p>
@@ -274,7 +315,7 @@ export default function Page() {
                 onClick={() => setDateSheet(null)}
                 aria-label="Close"
               >
-                &times;
+                <Icon name="close" size={16} />
               </button>
             </div>
 
@@ -282,8 +323,17 @@ export default function Page() {
               <>
                 <p className="sheet-sub">
                   You did{' '}
-                  {state.days.find((d) => d.id === dateSheet.session.dayId)?.name ||
-                    'a workout'}
+                  <b
+                    style={{
+                      color: state.days.find(
+                        (d) => d.id === dateSheet.session.dayId
+                      )?.color,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {state.days.find((d) => d.id === dateSheet.session.dayId)
+                      ?.name || 'a workout'}
+                  </b>
                   .
                 </p>
                 <button
@@ -315,6 +365,7 @@ export default function Page() {
                         setDateSheet(null);
                       }}
                     >
+                      <span className="chip-dot" style={{ background: d.color }} />
                       {d.name}
                     </button>
                   ))}

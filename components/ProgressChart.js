@@ -170,3 +170,45 @@ export default function ProgressChart({ history, unit = 'lb' }) {
     </>
   );
 }
+
+/** Tiny inline trend line for the progress list on the home screen. */
+export function Sparkline({ history, color = 'var(--smoke)', w = 54, h = 18 }) {
+  if (history.length < 2) {
+    return (
+      <svg width={w} height={h} aria-hidden="true" style={{ display: 'block' }}>
+        <line
+          x1="2"
+          y1={h / 2}
+          x2={w - 2}
+          y2={h / 2}
+          stroke="var(--line)"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      </svg>
+    );
+  }
+  const ws = history.map((p) => p.weight);
+  const lo = Math.min(...ws);
+  const hi = Math.max(...ws);
+  const range = hi - lo || 1;
+  const pts = history
+    .map((p, i) => {
+      const x = 2 + (i / (history.length - 1)) * (w - 4);
+      const y = h - 3 - ((p.weight - lo) / range) * (h - 6);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(' ');
+  return (
+    <svg width={w} height={h} aria-hidden="true" style={{ display: 'block' }}>
+      <polyline
+        points={pts}
+        fill="none"
+        stroke={color}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}

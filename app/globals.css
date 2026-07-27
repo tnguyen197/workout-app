@@ -245,6 +245,19 @@ input {
   background: var(--steel-press);
 }
 
+.daycard-bar {
+  width: 4px;
+  align-self: stretch;
+  min-height: 34px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.daycard-body {
+  flex: 1;
+  min-width: 0;
+}
+
 .daycard-name {
   display: block;
   font-size: 17px;
@@ -286,6 +299,11 @@ input {
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
 }
 
 .exrow-name {
@@ -325,9 +343,14 @@ input {
   flex-shrink: 0;
 }
 
-.exrow-chart:hover {
+.exrow-head:hover .exrow-chart {
   background: var(--steel-hi);
   color: var(--chalk);
+}
+
+/* stop long names from squeezing the stepper */
+.stepper {
+  min-width: 0;
 }
 
 .vrow {
@@ -387,7 +410,9 @@ input {
 }
 
 .step-val {
-  min-width: 72px;
+  width: 72px;
+  flex: 0 0 72px;
+  min-width: 0;
   height: 38px;
   border: none;
   background: none;
@@ -881,4 +906,80 @@ input {
   background: var(--sodium-soft);
   border-color: var(--sodium-line);
   color: var(--sodium);
+}
+
+.chip-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 7px;
+  flex-shrink: 0;
+}
+
+.swatches {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.swatch.on {
+  border-color: var(--iron);
+  box-shadow: 0 0 0 2px currentColor;
+}
+
+.prog-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--steel);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  padding: 11px 14px;
+  margin-bottom: 6px;
+  text-align: left;
+  transition: border-color 0.14s, background 0.14s;
+}
+
+.prog-row:hover {
+  border-color: var(--line);
+  background: var(--steel-hi);
+}
+
+.prog-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.prog-weight {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  flex-shrink: 0;
+}
+
+.prog-delta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  width: 42px;
+  text-align: right;
+  flex-shrink: 0;
+  color: var(--smoke-dim);
+}
+
+.prog-delta.up {
+  color: var(--rise);
 }
