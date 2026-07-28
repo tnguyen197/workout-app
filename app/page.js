@@ -254,17 +254,9 @@ export default function Page() {
       ) : (
         <>
           <div className="topbar">
-            <div className="wordmark-group">
-              <h1 className="wordmark">
-                GYM<span>/</span>LOG
-              </h1>
-              <span
-                className="version-badge"
-                title={`Built ${process.env.NEXT_PUBLIC_BUILT_AT}`}
-              >
-                {process.env.NEXT_PUBLIC_BUILD}
-              </span>
-            </div>
+            <h1 className="wordmark">
+              GYM<span>/</span>LOG
+            </h1>
             <button
               className="topbar-meta"
               onClick={() => setView(view === 'library' ? 'home' : 'library')}
@@ -377,6 +369,16 @@ export default function Page() {
             </>
           )}
         </>
+      )}
+
+      {view !== 'session' && (
+        <footer
+          className="build-tag"
+          title={`${process.env.NEXT_PUBLIC_STAMP} \u00b7 ${process.env.NEXT_PUBLIC_SHA}`}
+        >
+          {process.env.NEXT_PUBLIC_VERSION} &middot;{' '}
+          {process.env.NEXT_PUBLIC_BUILT_AT}
+        </footer>
       )}
 
       <input
