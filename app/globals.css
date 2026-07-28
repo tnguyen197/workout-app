@@ -1155,3 +1155,22 @@ input {
     }
   }
 }
+
+.wordmark-group {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.version-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--smoke-dim);
+  background: var(--steel);
+  border: 1px solid var(--line-soft);
+  border-radius: 4px;
+  padding: 2px 6px;
+  position: relative;
+  top: -1px;
+}

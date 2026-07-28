@@ -254,9 +254,17 @@ export default function Page() {
       ) : (
         <>
           <div className="topbar">
-            <h1 className="wordmark">
-              GYM<span>/</span>LOG
-            </h1>
+            <div className="wordmark-group">
+              <h1 className="wordmark">
+                GYM<span>/</span>LOG
+              </h1>
+              <span
+                className="version-badge"
+                title={`Built ${process.env.NEXT_PUBLIC_BUILT_AT}`}
+              >
+                {process.env.NEXT_PUBLIC_BUILD}
+              </span>
+            </div>
             <button
               className="topbar-meta"
               onClick={() => setView(view === 'library' ? 'home' : 'library')}
