@@ -31,17 +31,25 @@ function mmss(total) {
 }
 
 export default function RestTimer({ duration, endsAt, onStart, onStop, onAdjust }) {
-  const [now, setNow] = useState(() => Date.now());
+  // Deliberately not holding the current time in state. Doing that captured
+  // Date.now() at mount, so the first render after pressing start showed
+  // duration + however long the screen had been open before the interval
+  // caught up. The tick only forces a re-render; the clock is read fresh
+  // below, so a stale timestamp is impossible.
+  const [, tick] = useState(0);
   const firedRef = useRef(false);
 
   useEffect(() => {
     if (!endsAt) return;
     firedRef.current = false;
-    const id = setInterval(() => setNow(Date.now()), 250);
+    const id = setInterval(() => {
+      tick((t) => t + 1);
+      if (Date.now() >= endsAt) clearInterval(id);
+    }, 250);
     return () => clearInterval(id);
   }, [endsAt]);
 
-  const remaining = endsAt ? (endsAt - now) / 1000 : duration;
+  const remaining = endsAt ? (endsAt - Date.now()) / 1000 : duration;
   const done = endsAt != null && remaining <= 0;
 
   useEffect(() => {
