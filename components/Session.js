@@ -124,6 +124,7 @@ export default function Session({
       <RestTimer
         duration={restSeconds}
         endsAt={restEnd}
+        color={day.color}
         onStart={() => setRestEnd(Date.now() + restSeconds * 1000)}
         onStop={() => setRestEnd(null)}
         onAdjust={(delta) =>

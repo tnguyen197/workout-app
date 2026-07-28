@@ -1084,3 +1084,74 @@ input {
   font-size: 12px;
   color: var(--smoke-dim);
 }
+
+/* Full-screen alert when the rest ends. Deliberately unmissable: the
+   normal case is returning from another app and needing to know at a
+   glance whether it is time to lift. */
+.rest-over {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 24px;
+  background: var(--iron);
+  color: var(--chalk);
+  text-align: center;
+}
+
+.rest-over-ring {
+  width: 108px;
+  height: 108px;
+  margin-bottom: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  border: 3px solid var(--accent);
+}
+
+.rest-over-title {
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.rest-over-sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--smoke-dim);
+  margin-top: 6px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .rest-over {
+    animation: overIn 0.18s ease-out;
+  }
+  .rest-over-ring {
+    animation: ringPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes overIn {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes ringPulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.06);
+      opacity: 0.75;
+    }
+  }
+}
