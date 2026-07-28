@@ -277,7 +277,7 @@ function DayEditor({ state, mutate }) {
   );
 }
 
-function CloudBackup({ backup, onConnect, onRestore, onDisconnect }) {
+function CloudBackup({ backup, onConnect, onRestore, onDisconnect, onCheck }) {
   const [pass, setPass] = useState('');
 
   if (!backup.configured) {
@@ -361,10 +361,22 @@ function CloudBackup({ backup, onConnect, onRestore, onDisconnect }) {
         Saves on its own a couple of seconds after any change. Restore pulls the
         stored copy back and replaces what is on this device.
       </p>
+      {backup.meta && (
+        <p className="note" style={{ marginBottom: 12 }}>
+          {backup.meta.exists === false
+            ? 'The store is reachable but holds no backup yet.'
+            : `Stored: ${backup.meta.exercises} exercises, ${backup.meta.days} days, ${backup.meta.sessions} sessions (${backup.meta.bytes} bytes).`}
+        </p>
+      )}
       <div className="btn-row">
+        <button className="btn btn-ghost btn-full" onClick={onCheck}>
+          Check store
+        </button>
         <button className="btn btn-ghost btn-full" onClick={onRestore}>
           Restore
         </button>
+      </div>
+      <div className="btn-row">
         <button className="btn btn-ghost btn-full" onClick={onDisconnect}>
           Disconnect
         </button>
@@ -382,6 +394,7 @@ export default function Library({
   backup,
   onConnectBackup,
   onRestoreBackup,
+  onCheckBackup,
   onDisconnectBackup,
 }) {
   const [tab, setTab] = useState('exercises');
@@ -509,6 +522,7 @@ export default function Library({
             backup={backup}
             onConnect={onConnectBackup}
             onRestore={onRestoreBackup}
+            onCheck={onCheckBackup}
             onDisconnect={onDisconnectBackup}
           />
 

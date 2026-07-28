@@ -45,17 +45,68 @@ function guard(request) {
   return { db };
 }
 
+/**
+ * Upstash normally parses JSON on the way out, but depending on how the
+ * store was provisioned it can hand back the raw string instead. Accept
+ * either rather than trusting one shape.
+ */
+function normalise(raw) {
+  if (raw == null) return null;
+  let value = raw;
+  for (let i = 0; i < 2 && typeof value === 'string'; i++) {
+    try {
+      value = JSON.parse(value);
+    } catch {
+      return null;
+    }
+  }
+  return value && typeof value === 'object' ? value : null;
+}
+
 export async function GET(request) {
   const { db, error } = guard(request);
   if (error) return error;
 
+  let raw;
   try {
-    const saved = await db.get(KEY);
-    if (!saved) return Response.json({ error: 'No backup yet.' }, { status: 404 });
-    return Response.json(saved);
-  } catch {
-    return Response.json({ error: 'Could not read the backup.' }, { status: 502 });
+    raw = await db.get(KEY);
+  } catch (e) {
+    return Response.json(
+      { error: `Could not reach the backup store. ${e?.message ?? ''}`.trim() },
+      { status: 502 }
+    );
   }
+
+  if (raw == null) {
+    return Response.json({ error: 'No backup stored yet.' }, { status: 404 });
+  }
+
+  const saved = normalise(raw);
+  if (!saved?.data?.exercises || !saved?.data?.days) {
+    return Response.json(
+      {
+        error: 'A backup exists but could not be read.',
+        storedType: typeof raw,
+        topLevelKeys: saved ? Object.keys(saved).slice(0, 8) : null,
+      },
+      { status: 500 }
+    );
+  }
+
+  // ?meta=1 reports what is stored without handing back the payload, so
+  // you can check the store is healthy without overwriting the device.
+  if (new URL(request.url).searchParams.get('meta') === '1') {
+    return Response.json({
+      exists: true,
+      updatedAt: saved.updatedAt ?? null,
+      exercises: Object.keys(saved.data.exercises).length,
+      days: saved.data.days.length,
+      sessions: saved.data.sessions?.length ?? 0,
+      bytes: JSON.stringify(saved.data).length,
+    });
+  }
+
+  return Response.json(saved);
 }
 
 export async function POST(request) {
@@ -77,9 +128,14 @@ export async function POST(request) {
 
   const updatedAt = new Date().toISOString();
   try {
-    await db.set(KEY, { updatedAt, data: body });
+    // Stringify explicitly so what goes in has one known shape, rather
+    // than depending on the client's automatic serialisation.
+    await db.set(KEY, JSON.stringify({ updatedAt, data: body }));
     return Response.json({ updatedAt });
-  } catch {
-    return Response.json({ error: 'Could not save the backup.' }, { status: 502 });
+  } catch (e) {
+    return Response.json(
+      { error: `Could not save the backup. ${e?.message ?? ''}`.trim() },
+      { status: 502 }
+    );
   }
 }

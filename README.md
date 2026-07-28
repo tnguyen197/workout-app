@@ -1,183 +1,90 @@
 # Gym Log
 
-A weight tracker for a four-day anterior/posterior split, built from your notes.
+A weight tracker for a four-day anterior/posterior training split, built to
+replace a notes-app page that had started contradicting itself.
 
-Twenty-six exercise slots across four days, but only seventeen distinct exercises —
-nine of them appear in two days each. Those nine exist once in the data and are
-referenced by id, so changing a weight anywhere changes it everywhere. That is the
-whole point of the app.
+## The problem
 
----
+The original notes listed four workout days, each with its own exercise list
+and working weights. Twenty-six entries in total — but only seventeen distinct
+exercises, because nine of them appeared on two different days.
 
-## Deploy to Vercel
+Writing the same lift down twice meant the two copies drifted apart. Cable
+Crunch had ended up at 135 on one day and 130 on another; Leg Extension at 55
+and 45. Neither is wrong exactly, one is just older. When you add weight
+mid-workout you update the line in front of you and forget the other one.
 
-You need the code on GitHub first, then Vercel builds from it.
+## The approach
 
-### 1. Push to GitHub
-
-```bash
-cd gym-log
-git init
-git add .
-git commit -m "Gym Log"
-```
-
-Make an empty repo on github.com (no README, no .gitignore — this project has one),
-then:
-
-```bash
-git remote add origin https://github.com/YOUR-USERNAME/gym-log.git
-git branch -M main
-git push -u origin main
-```
-
-### 2. Import into Vercel
-
-Go to [vercel.com/new](https://vercel.com/new), pick the repo, and press Deploy.
-Every setting can stay on its default — Vercel detects Next.js on its own. There are
-no environment variables and no database to provision.
-
-You get a URL like `gym-log-yourname.vercel.app` in about a minute. Pushing to `main`
-redeploys automatically from then on.
-
-### Alternative: deploy without GitHub
-
-```bash
-npm i -g vercel
-cd gym-log
-vercel
-```
-
-Answer the prompts and it deploys straight from your machine.
-
----
-
-## Put it on your phone's home screen
-
-It's a PWA, so it installs without an app store and opens fullscreen with no browser
-chrome.
-
-**iPhone** — open the URL in Safari (this only works in Safari, not Chrome), tap the
-Share button, then "Add to Home Screen."
-
-**Android** — open in Chrome, tap the three-dot menu, then "Install app" or "Add to
-Home screen."
-
----
-
-## Running it locally
-
-```bash
-npm install
-npm run dev
-```
-
-Then open `http://localhost:3000`.
-
----
-
-## How it works
-
-**Starting a workout.** Tap one of the four day cards. You get that day's lifts in
-order, each with a minus/plus stepper. Tap the number itself to type an exact weight
-instead of stepping to it.
-
-**Linked lifts.** Exercises that appear in more than one day carry a `LINKED` badge.
-Change one and a toast tells you which other day just changed. Nine of your
-seventeen exercises are linked this way.
-
-**Finishing.** Tapping "Finish workout" stamps today's date and snapshots every weight
-on screen. This is the only thing that writes history — the progress charts and the
-week strip both read from it. Skip it and that session doesn't exist as far as the app
-is concerned.
-
-**The week strip.** Monday through Sunday, filled in sodium yellow for days you
-trained. Arrows page back through previous weeks. Tapping a past day you didn't log
-lets you backfill it; tapping a logged day lets you delete the log.
-
-**Progress charts.** The small chart icon on any exercise opens its weight history.
-Multi-variant exercises get a chip per variant, so you can look at Calf Raises plate
-loaded separately from cable.
-
-**Rest timer.** Docked at the bottom during a session. The ±15 buttons change your
-saved default, not just this one rest. It beeps and vibrates when it runs out.
-
----
-
-## Customizing
-
-Everything is editable in the app under **Edit** — you shouldn't need to touch code.
-
-- **Exercises tab** — rename anything, change weights, add or remove variants
-  (Machine / Cable / DB / whatever), add new exercises, delete old ones. Each card
-  shows which days use it.
-- **Days tab** — rename days, reorder lifts with the arrows, remove lifts, add any
-  exercise from your library.
-- **Data tab** — rest timer default, weight step (2.5 / 5 / 10 lb), backup, and reset.
-
-To change what a fresh install starts with, edit `lib/seed.js`.
-
----
-
-## Your data
-
-It lives in this browser's local storage on this device. Nothing is uploaded, there's
-no account, and there's no server holding a copy.
-
-The tradeoff: clearing your browser data or site data erases it, and it doesn't sync
-to other devices. **Use Export file in the Data tab now and then.** The file it saves
-restores onto any device through Import file, which is also how you'd move to a new
-phone.
-
----
-
-## Two things I changed from your notes
-
-Your notes had drifted in two places, since the same lift was written down twice. I
-took the heavier value in both cases — correct them in the app if I guessed wrong:
-
-| Exercise | Anterior A | Anterior B | Used |
-|---|---|---|---|
-| Cable Crunch | 135 | 130 | **135** |
-| Leg Extension (Machine) | 55 | 45 | **55** |
-
-Calf Raises was written as "130 / Standing 270 / Extension 310" in Posterior A and
-"Plate loaded 130 / Cable 270 / Extension 310" in Posterior B. I read those as the
-same three variants and labeled them Plate Loaded / Cable / Extension.
-
-"Leg Extension" and "Leg Extensions" were merged into one exercise.
-
----
-
-## File map
+Each exercise exists once. Days hold references to exercise IDs rather than
+their own copies of the data:
 
 ```
-app/
-  layout.js       fonts, PWA metadata, viewport
-  page.js         view routing, session logging, export/import
-  globals.css     the entire design system
-lib/
-  seed.js         your 17 exercises and 4 days
-  store.js        local storage, date maths, history queries
-components/
-  WeekStrip.js    Monday-Sunday training calendar
-  Session.js      workout view, propagation toast
-  ExerciseRow.js  steppers, tap-to-type, linked badge
-  RestTimer.js    countdown, beep, vibrate
-  ProgressChart.js hand-rolled SVG line chart
-  Library.js      exercise / day / settings editor
-public/           icons and web manifest
+exercises: { "incline-press": { name, variants: [{ label, weight }] }, ... }
+days:      [ { name: "Anterior A", exerciseIds: ["incline-press", ...] }, ... ]
 ```
 
-No chart library, no state library, no CSS framework. Dependencies are Next, React,
-and two self-hosted font packages.
+Changing a weight writes to one object, so both days read the new value
+immediately. Duplication becomes structurally impossible rather than something
+you have to remember to keep in sync.
 
----
+Because that guarantee is the entire reason the app exists, it is made visible
+rather than left implicit: shared lifts carry a badge, and changing one shows
+which other day just changed. A correctness property nobody notices is
+indistinguishable from a bug.
 
-## Notes on the build
+Exercises with multiple setups — a machine and a cable version of the same
+movement — hold a list of labelled variants, each with its own weight. That
+mirrors how the original notes were already written.
 
-Fonts are self-hosted via `@fontsource` rather than fetched from Google at build time,
-so the app never calls out to Google — it loads fine on gym wifi that barely works.
+## Design decisions
 
-Archivo is set with tabular figures throughout, which means digits are all the same
-width and the numbers don't shift around as you step a weight up and down.
+**Local storage as the source of truth.** Every read hits the device. The
+network is never in the path of anything you do standing at a machine, so the
+app is instant and works in a basement with no signal.
+
+**Cloud backup, not sync.** One device means one writer, which means no merge
+conflicts and no accounts. Data is pushed to Redis two seconds after changes
+settle. A failed backup surfaces in the UI and retries on the next change; it
+never blocks anything local. This covers losing the phone or having storage
+cleared, which are the failure modes that actually happen to one person.
+
+**Weight only, no rep logging.** The original notes tracked working weight and
+nothing else, and the app is faster for it. Progress charts read from weight
+snapshots taken when a workout is marked finished.
+
+**No UI framework and no chart library.** Roughly 600 lines of CSS and a
+hand-rolled SVG chart, against three runtime dependencies. For a single-screen
+app the configuration and bundle cost of pulling in more would exceed what it
+saved.
+
+## Trade-offs I'd flag
+
+The cloud backup keeps one slot and overwrites it, so there is no version
+history. If local data were corrupted, the corruption would be replicated two
+seconds later. JSON export covers this — it produces a snapshot nothing can
+overwrite — but rotating the last few backups under separate keys would close
+the gap properly.
+
+Device-local storage means iOS Safari's seven-day storage eviction applies. It
+does not apply to home-screen web apps, which is how this is meant to be
+installed, but a user who only ever opened it in a Safari tab could lose data
+after a week away.
+
+Backfilling a missed session records today's weights, since the app has no idea
+what was actually lifted that day. It says so in the UI rather than quietly
+guessing.
+
+## Stack
+
+Next.js on Vercel, React, Upstash Redis for backup, self-hosted fonts. Client
+rendered, installable as a PWA. Fonts are self-hosted rather than fetched from
+Google so the app makes no third-party requests on load.
+
+```
+app/       routes, API handlers, global stylesheet
+lib/       seed data, storage, date helpers, backup client
+components/  week strip, session, exercise row, rest timer, chart, editor
+```
+
+Run locally with `npm install && npm run dev`.

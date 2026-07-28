@@ -13,6 +13,7 @@ import {
   rememberKey,
   pushBackup,
   pullBackup,
+  inspectBackup,
 } from '@/lib/backup';
 import {
   loadState,
@@ -109,6 +110,16 @@ export default function Page() {
         updatedAt: got.updatedAt,
         error: null,
       }));
+    } catch (e) {
+      setBackup((b) => ({ ...b, status: 'error', error: e.message }));
+    }
+  }
+
+  async function checkBackup() {
+    setBackup((b) => ({ ...b, status: 'saving', error: null, meta: null }));
+    try {
+      const meta = await inspectBackup(backup.key);
+      setBackup((b) => ({ ...b, status: 'saved', meta, error: null }));
     } catch (e) {
       setBackup((b) => ({ ...b, status: 'error', error: e.message }));
     }
@@ -261,6 +272,7 @@ export default function Page() {
               backup={backup}
               onConnectBackup={connectBackup}
               onRestoreBackup={restoreBackup}
+              onCheckBackup={checkBackup}
               onDisconnectBackup={disconnectBackup}
               onExport={exportFile}
               onImport={() => fileRef.current?.click()}
