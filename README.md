@@ -27,52 +27,30 @@ immediately. Duplication becomes impossible rather than something I would have t
 
 ## Design decisions
 
-**Local storage as the source of truth.** Every read hits the device. The
-network is never in the path of anything you do standing at a machine, so the
-app is instant and works in a basement with no signal.
-
-**Cloud backup, not sync.** One device means one writer, which means no merge
-conflicts and no accounts. Data is pushed to Redis two seconds after changes
-settle. A failed backup surfaces in the UI and retries on the next change; it
-never blocks anything local. This covers losing the phone or having storage
-cleared, which are the failure modes that actually happen to one person.
-
-**Weight only, no rep logging.** The original notes tracked working weight and
-nothing else, and the app is faster for it. Progress charts read from weight
-snapshots taken when a workout is marked finished.
-
-**No UI framework and no chart library.** Roughly 600 lines of CSS and a
-hand-rolled SVG chart, against three runtime dependencies. For a single-screen
-app the configuration and bundle cost of pulling in more would exceed what it
-saved.
-
-## Trade-offs I'd flag
-
-The cloud backup keeps one slot and overwrites it, so there is no version
-history. If local data were corrupted, the corruption would be replicated two
-seconds later. JSON export covers this — it produces a snapshot nothing can
-overwrite — but rotating the last few backups under separate keys would close
-the gap properly.
-
-Device-local storage means iOS Safari's seven-day storage eviction applies. It
-does not apply to home-screen web apps, which is how this is meant to be
-installed, but a user who only ever opened it in a Safari tab could lose data
-after a week away.
-
-Backfilling a missed session records today's weights, since the app has no idea
-what was actually lifted that day. It says so in the UI rather than quietly
-guessing.
+- **Local storage is the source of truth.** Reads and writes stay on-device, so
+  the app is instant and usable with no signal.
+- **Cloud backup, not sync.** Single-user, single-device by design. Changes are
+  backed up to Redis after a short delay. Backup failures show in the UI and
+  retry on the next change and local use is never blocked.
+- **Weight only.** My notes tracked working weight, so the app does too.
+  Progress charts use weight snapshots saved when a workout is marked finished.
+- **Small surface area.** No UI framework and no chart library: one screen,
+  plain React, custom SVG chart, minimal runtime dependencies.
 
 ## Stack
 
-Next.js on Vercel, React, Upstash Redis for backup, self-hosted fonts. Client
-rendered, installable as a PWA. Fonts are self-hosted rather than fetched from
-Google so the app makes no third-party requests on load.
+Next.js (Vercel), React, Upstash Redis, self-hosted fonts. Client-rendered and
+installable as a PWA.
 
 ```
-app/       routes, API handlers, global stylesheet
-lib/       seed data, storage, date helpers, backup client
+app/         routes, API handlers, global stylesheet
+lib/         seed data, storage, date helpers, backup client
 components/  week strip, session, exercise row, rest timer, chart, editor
 ```
 
-Run locally with `npm install && npm run dev`.
+Run locally with:
+
+```bash
+npm install
+npm run dev
+```
