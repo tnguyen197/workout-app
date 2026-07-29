@@ -1,18 +1,16 @@
 # Gym Log
 
-A weight tracker for a four-day anterior/posterior training split, built to
-replace a notes-app page that had started contradicting itself.
+A weight tracker for my personaltraining split, built to
+replace a notes-app page that was getting frustrating to use.
 
 ## The problem
 
-The original notes listed four workout days, each with its own exercise list
-and working weights. Twenty-six entries in total — but only seventeen distinct
-exercises, because nine of them appeared on two different days.
+My original notes listed four workout days, each with its own exercise list
+and working weights. There were 26 entries in total but only seventeen distinct
+exercises because nine of them appeared on two different days.
 
-Writing the same lift down twice meant the two copies drifted apart. Cable
-Crunch had ended up at 135 on one day and 130 on another; Leg Extension at 55
-and 45. Neither is wrong exactly, one is just older. When you add weight
-mid-workout you update the line in front of you and forget the other one.
+Writing the same lift down twice meant the two copies drifted apart. When I would add weight to an exercise I would have to do
+it in multiple places, leading to mismatches occurring. This flow overall was annoying to use, leading to the development of this app.
 
 ## The approach
 
@@ -25,17 +23,7 @@ days:      [ { name: "Anterior A", exerciseIds: ["incline-press", ...] }, ... ]
 ```
 
 Changing a weight writes to one object, so both days read the new value
-immediately. Duplication becomes structurally impossible rather than something
-you have to remember to keep in sync.
-
-Because that guarantee is the entire reason the app exists, it is made visible
-rather than left implicit: shared lifts carry a badge, and changing one shows
-which other day just changed. A correctness property nobody notices is
-indistinguishable from a bug.
-
-Exercises with multiple setups — a machine and a cable version of the same
-movement — hold a list of labelled variants, each with its own weight. That
-mirrors how the original notes were already written.
+immediately. Duplication becomes impossible rather than something I would have to remember to do.
 
 ## Design decisions
 
